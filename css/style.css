@@ -2,6 +2,10 @@ body {
   min-width: 420px;
 }
 
+a:hover {
+  text-decoration: none;
+}
+
 .header {
   background-color: #3E5E93;
   color: #fff;
@@ -14,6 +18,9 @@ body {
   font-size: 32px;
   font-weight: bold;
   text-transform: uppercase;
+  max-width: 500px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 .delete {
@@ -124,5 +131,6 @@ body {
 @media (max-width: 720px) {
   .logo {
     font-size: 20px;
+    max-width: 400px;
   }
 }
