@@ -90,9 +90,9 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class='delete'>Удалить</th>
-        <th>Имя</th>
-        <th>Фамилия</th>
-        <th>Телефон</th>
+        <th class="col-3">Имя</th>
+        <th class="col-3">Фамилия</th>
+        <th class="col-6">Телефон</th>
       </tr>
     `);
 
@@ -171,14 +171,28 @@ const data = [
     tdSurname.textContent = surname;
 
     const tdPhone = document.createElement('td');
+    tdPhone.classList.add('d-flex', 'justify-content-between', 'td-phone');
     const phoneLink = document.createElement('a');
     phoneLink.href = `${phone}`;
     phoneLink.textContent = phone;
 
     tr.phoneLink = phoneLink;
 
-    tdPhone.append(phoneLink);
-    tr.append(tdDel, tdName, tdSurname, tdPhone);
+    const buttonsGroup = createButtonsGroup([
+      {
+        className: 'btn btn-primary button-edit',
+        type: 'button',
+        text: 'Редактировать',
+      },
+    ]);
+
+    tdPhone.append(phoneLink, ...buttonsGroup.buttons);
+    tr.append(
+      tdDel, 
+      tdName, 
+      tdSurname, 
+      tdPhone, 
+    );
 
     return tr;
   };

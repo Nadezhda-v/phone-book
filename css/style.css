@@ -129,6 +129,16 @@ a:hover {
   text-align: center;
 }
 
+@media (max-width: 800px) {
+  .td-phone {
+    gap: 15px;
+  }
+
+  .button-edit {
+    font-size: .8em;
+  }
+}
+
 @media (max-width: 720px) {
   .logo {
     font-size: 20px;
