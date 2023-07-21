@@ -331,7 +331,7 @@ const data = [
     });
 
 
-    // Сортировка контактов в алфавитном порядке по имени и фамилии
+    // Сортировка контактов в алфавитном порядке по имени 
 
     headerList.querySelectorAll('.cell-name').forEach(cell => {
       cell.addEventListener('click', () => {
@@ -339,14 +339,12 @@ const data = [
 
         allRow.forEach(row => {
           const firstName = row.querySelector('.td-name').textContent;
-          const surname = row.querySelector('.td-surname').textContent;
-          const fullName = `${firstName} ${surname}`;
 
-          allContacts.push({fullName, row});
+          allContacts.push({firstName, row});
         });
 
         const sortedContarts = allContacts.sort((a, b) =>
-          a.fullName.localeCompare(b.fullName));
+          a.firstName.localeCompare(b.firstName));
 
         const sortedRows = sortedContarts.map(item => item.row);
 
