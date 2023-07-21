@@ -113,11 +113,11 @@ a:hover {
   background-image: url("../img/del.svg");
 }
 
-.cell-name {
+.th-cell {
   cursor: pointer;
 }
 
-.cell-name:hover {
+.th-cell:hover {
   color: #007bff;
 }
 
