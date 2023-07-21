@@ -65,7 +65,7 @@ const data = [
     const btnWrapper = document.createElement('div');
     btnWrapper.classList.add('btn-wrapper');
 
-    const buttons = params.map(({ className, type, text }) => {
+    const buttons = params.map(({className, type, text}) => {
       const button = document.createElement('button');
       button.className = className;
       button.type = type;
@@ -90,8 +90,8 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class='delete'>Удалить</th>
-        <th class="col-3">Имя</th>
-        <th class="col-3">Фамилия</th>
+        <th class="col-3 cell-name">Имя</th>
+        <th class="col-3 cell-name">Фамилия</th>
         <th class="col-6">Телефон</th>
       </tr>
     `);
@@ -100,6 +100,7 @@ const data = [
 
     table.append(thead, tbody);
     table.tbody = tbody;
+    table.thead = thead;
 
     return table;
   };
@@ -151,10 +152,10 @@ const data = [
 
     const buttonClose = form.querySelector('.close');
 
-    return { overlay, form, buttonClose };
+    return {overlay, form, buttonClose};
   };
 
-  const createRow = ({ name: firstName, surname, phone }) => {
+  const createRow = ({name: firstName, surname, phone}) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
 
@@ -166,9 +167,11 @@ const data = [
     tdDel.append(buttonDel);
 
     const tdName = document.createElement('td');
+    tdName.classList.add('td-name');
     tdName.textContent = firstName;
 
     const tdSurname = document.createElement('td');
+    tdSurname.classList.add('td-surname');
     tdSurname.textContent = surname;
 
     const tdPhone = document.createElement('td');
@@ -189,10 +192,10 @@ const data = [
 
     tdPhone.append(phoneLink, ...buttonsGroup.buttons);
     tr.append(
-      tdDel, 
-      tdName, 
-      tdSurname, 
-      tdPhone, 
+        tdDel,
+        tdName,
+        tdSurname,
+        tdPhone,
     );
 
     return tr;
@@ -216,7 +219,7 @@ const data = [
       contact.addEventListener('mouseleave', () => {
         logo.textContent = text;
       });
-    })
+    });
   };
 
   const createFooter = (title) => {
@@ -265,6 +268,7 @@ const data = [
       formOverlay: form.overlay,
       form: form.form,
       buttonDel: buttonsGroup.buttons[1],
+      headerList: table.thead,
     };
   };
 
@@ -272,20 +276,25 @@ const data = [
     const app = document.querySelector(selectorApp);
     const phoneBook = renderPhoneBook(app, title);
 
-    const { 
-      list, 
+    const {
+      list,
       logo,
-      buttonAdd, 
-      formOverlay, 
-      buttonDel, 
+      buttonAdd,
+      formOverlay,
+      buttonDel,
+      headerList,
     } = phoneBook;
 
     const allRow = renderContacts(list, data);
     hoverRow(allRow, logo);
 
+    // Открытие модального окна
+
     buttonAdd.addEventListener('click', () => {
       formOverlay.classList.add('is-visible');
     });
+
+    // Закрытие модального окна
 
     formOverlay.addEventListener('click', e => {
       const target = e.target;
@@ -295,16 +304,53 @@ const data = [
       }
     });
 
+    /* Появление при нажатии на кнопку 'Удалить'
+    скрытого поля и кнопки, имеющих класс delete*/
+
     buttonDel.addEventListener('click', () => {
       document.querySelectorAll('.delete').forEach(del => {
         del.classList.toggle('is-visible');
       });
     });
 
+    // Удаление контактов
+
     list.addEventListener('click', e => {
-      if (e.target.classList.contains('del-icon')) {
-        e.target.closest('.contact').remove();
-      };
+      const target = e.target;
+
+      if (target.classList.contains('del-icon')) {
+        const contactRow = target.closest('.contact');
+        const index = allRow.indexOf(contactRow);
+
+        if (index !== -1) {
+          allRow.splice(index, 1);
+        }
+
+        contactRow.remove();
+      }
+    });
+
+
+    // Сортировка контактов в алфавитном порядке по имени 
+
+    headerList.querySelectorAll('.cell-name').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const allContacts = [];
+
+        allRow.forEach(row => {
+          const firstName = row.querySelector('.td-name').textContent;
+
+          allContacts.push({firstName, row});
+        });
+
+        const sortedContarts = allContacts.sort((a, b) =>
+          a.firstName.localeCompare(b.firstName));
+
+        const sortedRows = sortedContarts.map(item => item.row);
+
+        list.innerHTML = '';
+        list.append(...sortedRows);
+      });
     });
   };
 
