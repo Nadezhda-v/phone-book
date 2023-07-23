@@ -70,7 +70,7 @@ const data = [
     const btnWrapper = document.createElement('div');
     btnWrapper.classList.add('btn-wrapper');
 
-    const buttons = params.map(({className, type, text}) => {
+    const buttons = params.map(({ className, type, text }) => {
       const button = document.createElement('button');
       button.className = className;
       button.type = type;
@@ -95,8 +95,8 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class='delete'>Удалить</th>
-        <th class="col-3 cell-name">Имя</th>
-        <th class="col-3 cell-name">Фамилия</th>
+        <th class="col-3 th-cell cell-name">Имя</th>
+        <th class="col-3 th-cell cell-surname">Фамилия</th>
         <th class="col-6">Телефон</th>
       </tr>
     `);
@@ -157,10 +157,10 @@ const data = [
 
     const buttonClose = form.querySelector('.close');
 
-    return {overlay, form, buttonClose};
+    return { overlay, form, buttonClose };
   };
 
-  const createRow = ({name: firstName, surname, phone}) => {
+  const createRow = ({ name: firstName, surname, phone }) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
 
@@ -172,11 +172,11 @@ const data = [
     tdDel.append(buttonDel);
 
     const tdName = document.createElement('td');
-    tdName.classList.add('td-name');
+    tdName.classList.add('cell-name');
     tdName.textContent = firstName;
 
     const tdSurname = document.createElement('td');
-    tdSurname.classList.add('td-surname');
+    tdSurname.classList.add('cell-surname');
     tdSurname.textContent = surname;
 
     const tdPhone = document.createElement('td');
@@ -197,10 +197,10 @@ const data = [
 
     tdPhone.append(phoneLink, ...buttonsGroup.buttons);
     tr.append(
-        tdDel,
-        tdName,
-        tdSurname,
-        tdPhone,
+      tdDel,
+      tdName,
+      tdSurname,
+      tdPhone,
     );
 
     return tr;
@@ -259,7 +259,7 @@ const data = [
       },
     ]);
     const table = createTable();
-    const {form, overlay} = createForm();
+    const { form, overlay } = createForm();
     const footer = createFooter(title);
 
     app.append(header, main, footer);
@@ -276,7 +276,7 @@ const data = [
       headerList: table.thead,
     };
   };
-  
+
   // Открытие и закрытие модального окна
 
   const modalControl = (buttonAdd, formOverlay) => {
@@ -294,7 +294,6 @@ const data = [
 
     formOverlay.addEventListener('click', e => {
       const target = e.target;
-
       if (target === formOverlay || target.closest('.close')) {
         closeModal();
       }
@@ -326,57 +325,73 @@ const data = [
 
         if (index !== -1) {
           allRow.splice(index, 1);
+
+        // Удаление контакта из массива data
+
+        const dataPhone = contactRow.querySelector('.td-phone a').textContent;
+        const dataIndex = data.findIndex(item => item.phone === dataPhone);
+
+        if (dataIndex !== -1) {
+          data.splice(dataIndex, 1);
+        }
         }
 
         contactRow.remove();
+        console.log(data);
       }
-    });
-  };
-
-  // Сортировка контактов в алфавитном порядке по имени 
-
-  const sortContacts = (headerList, allRow, list) => {
-    headerList.querySelectorAll('.cell-name').forEach(cell => {
-      cell.addEventListener('click', () => {
-        const allContacts = [];
-
-        allRow.forEach(row => {
-          const firstName = row.querySelector('.td-name').textContent;
-
-          allContacts.push({firstName, row});
-        });
-
-        const sortedContarts = allContacts.sort((a, b) =>
-          a.firstName.localeCompare(b.firstName));
-
-        const sortedRows = sortedContarts.map(item => item.row);
-
-        list.innerHTML = '';
-        list.append(...sortedRows);
-      });
     });
   };
 
   // Добавление контакта на страницу
 
-  const addContactPage = (newContact, list) => {
+  const addContactPage = (newContact, list, allRow) => {
     const row = createRow(newContact);
-    list.prepend(row);
+    list.append(row);
+    allRow.push(row);
   };
 
   // Заполнение и отправка формы 
 
-  const formControl = (form, list, closeModal) => {
+  const formControl = (form, list, closeModal, allRow) => {
     form.addEventListener('submit', e => {
       e.preventDefault();
       const formData = new FormData(e.target);
 
       const newContact = Object.fromEntries(formData);
-      addContactPage(newContact, list);
+      addContactPage(newContact, list, allRow);
       addContactData(newContact);
 
       form.reset();
       closeModal();
+    });
+  };
+
+  // Сортировка контактов
+
+  const sortContacts = (cellSelector, headerList, list, allRow) => {
+    const cell = headerList.querySelector(cellSelector);
+    let isAscending = true;
+
+    cell.addEventListener('click', () => {
+      const allData = [];
+
+      allRow.forEach(row => {
+        const textContent = row.querySelector(cellSelector).textContent;
+        allData.push({ data: textContent, row });
+      });
+
+      if (isAscending) {
+        allData.sort((a, b) => a.data.localeCompare(b.data));
+      } else {
+        allData.sort((a, b) => b.data.localeCompare(a.data));
+      }
+
+      isAscending = !isAscending;
+
+      const sortedRows = allData.map(item => item.row);
+
+      list.innerHTML = '';
+      list.append(...sortedRows);
     });
   };
 
@@ -396,11 +411,11 @@ const data = [
     const allRow = renderContacts(list, data);
     hoverRow(allRow, logo);
 
-    const {closeModal} = modalControl(buttonAdd, formOverlay);
+    const { closeModal } = modalControl(buttonAdd, formOverlay);
     deleateControl(buttonDel, list, allRow);
-    sortContacts(headerList, list, allRow);
-    formControl(form, list, closeModal);
-
+    formControl(form, list, closeModal, allRow);
+    sortContacts('.cell-name', headerList, list, allRow);
+    sortContacts('.cell-surname', headerList, list, allRow);
   };
 
   window.phoneBookInit = init;
