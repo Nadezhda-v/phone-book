@@ -24,6 +24,11 @@ const data = [
 ];
 
 {
+  const addContactData = (newContact) => {
+    data.push(newContact);
+    console.log(data);
+  }
+
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -90,8 +95,8 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class='delete'>Удалить</th>
-        <th class="col-3">Имя</th>
-        <th class="col-3">Фамилия</th>
+        <th class="col-3 th-cell cell-name">Имя</th>
+        <th class="col-3 th-cell cell-surname">Фамилия</th>
         <th class="col-6">Телефон</th>
       </tr>
     `);
@@ -100,6 +105,7 @@ const data = [
 
     table.append(thead, tbody);
     table.tbody = tbody;
+    table.thead = thead;
 
     return table;
   };
@@ -166,9 +172,11 @@ const data = [
     tdDel.append(buttonDel);
 
     const tdName = document.createElement('td');
+    tdName.classList.add('cell-name');
     tdName.textContent = firstName;
 
     const tdSurname = document.createElement('td');
+    tdSurname.classList.add('cell-surname');
     tdSurname.textContent = surname;
 
     const tdPhone = document.createElement('td');
@@ -189,10 +197,10 @@ const data = [
 
     tdPhone.append(phoneLink, ...buttonsGroup.buttons);
     tr.append(
-      tdDel, 
-      tdName, 
-      tdSurname, 
-      tdPhone, 
+      tdDel,
+      tdName,
+      tdSurname,
+      tdPhone,
     );
 
     return tr;
@@ -216,7 +224,7 @@ const data = [
       contact.addEventListener('mouseleave', () => {
         logo.textContent = text;
       });
-    })
+    });
   };
 
   const createFooter = (title) => {
@@ -251,49 +259,54 @@ const data = [
       },
     ]);
     const table = createTable();
-    const form = createForm();
+    const { form, overlay } = createForm();
     const footer = createFooter(title);
 
     app.append(header, main, footer);
     header.headerContainer.append(logo);
-    main.mainContainer.append(buttonsGroup.btnWrapper, table, form.overlay);
+    main.mainContainer.append(buttonsGroup.btnWrapper, table, overlay);
 
     return {
       list: table.tbody,
       logo,
       buttonAdd: buttonsGroup.buttons[0],
-      formOverlay: form.overlay,
-      form: form.form,
+      formOverlay: overlay,
+      form: form,
       buttonDel: buttonsGroup.buttons[1],
+      headerList: table.thead,
     };
   };
 
-  const init = (selectorApp, title) => {
-    const app = document.querySelector(selectorApp);
-    const phoneBook = renderPhoneBook(app, title);
+  // Открытие и закрытие модального окна
 
-    const { 
-      list, 
-      logo,
-      buttonAdd, 
-      formOverlay, 
-      buttonDel, 
-    } = phoneBook;
+  const modalControl = (buttonAdd, formOverlay) => {
+    const openModal = () => {
+      formOverlay.classList.add('is-visible');
+    };
 
-    const allRow = renderContacts(list, data);
-    hoverRow(allRow, logo);
+    const closeModal = () => {
+      formOverlay.classList.remove('is-visible');
+    };
 
     buttonAdd.addEventListener('click', () => {
-      formOverlay.classList.add('is-visible');
+      openModal();
     });
 
     formOverlay.addEventListener('click', e => {
       const target = e.target;
-
       if (target === formOverlay || target.closest('.close')) {
-        formOverlay.classList.remove('is-visible');
+        closeModal();
       }
     });
+
+    return {
+      closeModal,
+    };
+  };
+
+  const deleateControl = (buttonDel, list, allRow) => {
+    /* Появление при нажатии на кнопку 'Удалить'
+    скрытого поля и кнопки, имеющих класс delete*/
 
     buttonDel.addEventListener('click', () => {
       document.querySelectorAll('.delete').forEach(del => {
@@ -301,11 +314,108 @@ const data = [
       });
     });
 
+    // Удаление контактов
+
     list.addEventListener('click', e => {
-      if (e.target.classList.contains('del-icon')) {
-        e.target.closest('.contact').remove();
-      };
+      const target = e.target;
+
+      if (target.classList.contains('del-icon')) {
+        const contactRow = target.closest('.contact');
+        const index = allRow.indexOf(contactRow);
+
+        if (index !== -1) {
+          allRow.splice(index, 1);
+
+        // Удаление контакта из массива data
+
+        const dataPhone = contactRow.querySelector('.td-phone a').textContent;
+        const dataIndex = data.findIndex(item => item.phone === dataPhone);
+
+        if (dataIndex !== -1) {
+          data.splice(dataIndex, 1);
+        }
+        }
+
+        contactRow.remove();
+        console.log(data);
+      }
     });
+  };
+
+  // Добавление контакта на страницу
+
+  const addContactPage = (newContact, list, allRow) => {
+    const row = createRow(newContact);
+    list.append(row);
+    allRow.push(row);
+  };
+
+  // Заполнение и отправка формы 
+
+  const formControl = (form, list, closeModal, allRow) => {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+
+      const newContact = Object.fromEntries(formData);
+      addContactPage(newContact, list, allRow);
+      addContactData(newContact);
+
+      form.reset();
+      closeModal();
+    });
+  };
+
+  // Сортировка контактов
+
+  const sortContacts = (cellSelector, headerList, list, allRow) => {
+    const cell = headerList.querySelector(cellSelector);
+    let isAscending = true;
+
+    cell.addEventListener('click', () => {
+      const allData = [];
+
+      allRow.forEach(row => {
+        const textContent = row.querySelector(cellSelector).textContent;
+        allData.push({ data: textContent, row });
+      });
+
+      if (isAscending) {
+        allData.sort((a, b) => a.data.localeCompare(b.data));
+      } else {
+        allData.sort((a, b) => b.data.localeCompare(a.data));
+      }
+
+      isAscending = !isAscending;
+
+      const sortedRows = allData.map(item => item.row);
+
+      list.innerHTML = '';
+      list.append(...sortedRows);
+    });
+  };
+
+  const init = (selectorApp, title) => {
+    const app = document.querySelector(selectorApp);
+
+    const {
+      list,
+      logo,
+      buttonAdd,
+      formOverlay,
+      buttonDel,
+      headerList,
+      form,
+    } = renderPhoneBook(app, title);
+
+    const allRow = renderContacts(list, data);
+    hoverRow(allRow, logo);
+
+    const { closeModal } = modalControl(buttonAdd, formOverlay);
+    deleateControl(buttonDel, list, allRow);
+    formControl(form, list, closeModal, allRow);
+    sortContacts('.cell-name', headerList, list, allRow);
+    sortContacts('.cell-surname', headerList, list, allRow);
   };
 
   window.phoneBookInit = init;

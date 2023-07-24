@@ -113,6 +113,14 @@ a:hover {
   background-image: url("../img/del.svg");
 }
 
+.th-cell {
+  cursor: pointer;
+}
+
+.th-cell:hover {
+  color: #007bff;
+}
+
 .del-icon:hover,
 .close:hover {
   opacity: 0.7;
