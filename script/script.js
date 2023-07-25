@@ -1,34 +1,6 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Иван',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Игорь',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Семён',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
-
 {
-  const addContactData = (newContact) => {
-    data.push(newContact);
-    console.log(data);
-  }
-
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -122,19 +94,19 @@ const data = [
 
       <div class="form-group">
         <label class="form-label" for="name">Имя:</label>
-        <input lass="form-input" name="name" 
+        <input class="form-input" name="name" 
           id="name" type="text" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="surname">Фамилия:</label>
-        <input lass="form-input" name="surname" 
+        <input class="form-input" name="surname" 
           id="surname" type="text" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="phone">Телефон:</label>
-        <input lass="form-input" name="phone" 
+        <input class="form-input" name="phone" 
           id="phone" type="number" required>
       </div>
     `);
@@ -206,11 +178,9 @@ const data = [
     return tr;
   };
 
-  const renderContacts = (item, data) => {
-    const allRow = data.map(createRow);
-    item.append(...allRow);
-
-    return allRow;
+  const renderContacts = (list, contacts) => {
+    const allRow = contacts.map(createRow);
+    list.append(...allRow);
   };
 
   const hoverRow = (allRow, logo) => {
@@ -304,7 +274,7 @@ const data = [
     };
   };
 
-  const deleateControl = (buttonDel, list, allRow) => {
+  const deleateControl = (buttonDel, list) => {
     /* Появление при нажатии на кнопку 'Удалить'
     скрытого поля и кнопки, имеющих класс delete*/
 
@@ -321,45 +291,32 @@ const data = [
 
       if (target.classList.contains('del-icon')) {
         const contactRow = target.closest('.contact');
-        const index = allRow.indexOf(contactRow);
-
-        if (index !== -1) {
-          allRow.splice(index, 1);
-
-        // Удаление контакта из массива data
-
-        const dataPhone = contactRow.querySelector('.td-phone a').textContent;
-        const dataIndex = data.findIndex(item => item.phone === dataPhone);
-
-        if (dataIndex !== -1) {
-          data.splice(dataIndex, 1);
-        }
-        }
+        const phone = contactRow.querySelector('.td-phone a').textContent;
 
         contactRow.remove();
-        console.log(data);
+        removeStorage(phone);
       }
     });
   };
 
-  // Добавление контакта на страницу
+  // Добавление контакта на страницу и в localStorage
 
-  const addContactPage = (newContact, list, allRow) => {
+  const addContactPage = (newContact, list, logo) => {
     const row = createRow(newContact);
     list.append(row);
-    allRow.push(row);
+    hoverRow([row], logo);
+    setStorage('contacts', newContact);
   };
 
   // Заполнение и отправка формы 
 
-  const formControl = (form, list, closeModal, allRow) => {
+  const formControl = (form, list, closeModal, logo) => {
     form.addEventListener('submit', e => {
       e.preventDefault();
       const formData = new FormData(e.target);
 
       const newContact = Object.fromEntries(formData);
-      addContactPage(newContact, list, allRow);
-      addContactData(newContact);
+      addContactPage(newContact, list, logo);
 
       form.reset();
       closeModal();
@@ -368,14 +325,14 @@ const data = [
 
   // Сортировка контактов
 
-  const sortContacts = (cellSelector, headerList, list, allRow) => {
+  const sortContacts = (cellSelector, headerList, list) => {
     const cell = headerList.querySelector(cellSelector);
     let isAscending = true;
 
     cell.addEventListener('click', () => {
       const allData = [];
 
-      allRow.forEach(row => {
+      [...list.querySelectorAll('.contact')].forEach(row => {
         const textContent = row.querySelector(cellSelector).textContent;
         allData.push({ data: textContent, row });
       });
@@ -395,6 +352,32 @@ const data = [
     });
   };
 
+  // Получение данных из localStorage
+
+  const getStorage = (key) => {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data || [];
+  };
+
+  // Запись данных в localStorage
+
+  const setStorage = (key, obj) => {
+    const contacts = getStorage(key);
+    contacts.push(obj);
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
+  // Удаление контактов из localStorage
+
+  const removeStorage = (phone) => {
+    const key = 'contacts';
+    const contacts = getStorage(key);
+    const dataIndex = contacts.findIndex(contact => contact.phone === phone);
+    contacts.splice(dataIndex, 1);
+
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
 
@@ -408,14 +391,15 @@ const data = [
       form,
     } = renderPhoneBook(app, title);
 
-    const allRow = renderContacts(list, data);
-    hoverRow(allRow, logo);
+    const contacts = getStorage('contacts');
+    renderContacts(list, contacts);
+    hoverRow(list.querySelectorAll('.contact'), logo);
 
     const { closeModal } = modalControl(buttonAdd, formOverlay);
-    deleateControl(buttonDel, list, allRow);
-    formControl(form, list, closeModal, allRow);
-    sortContacts('.cell-name', headerList, list, allRow);
-    sortContacts('.cell-surname', headerList, list, allRow);
+    deleateControl(buttonDel, list);
+    formControl(form, list, closeModal, logo);
+    sortContacts('.cell-name', headerList, list);
+    sortContacts('.cell-surname', headerList, list);
   };
 
   window.phoneBookInit = init;
