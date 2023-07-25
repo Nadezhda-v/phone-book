@@ -42,7 +42,7 @@
     const btnWrapper = document.createElement('div');
     btnWrapper.classList.add('btn-wrapper');
 
-    const buttons = params.map(({ className, type, text }) => {
+    const buttons = params.map(({className, type, text}) => {
       const button = document.createElement('button');
       button.className = className;
       button.type = type;
@@ -129,10 +129,10 @@
 
     const buttonClose = form.querySelector('.close');
 
-    return { overlay, form, buttonClose };
+    return {overlay, form, buttonClose};
   };
 
-  const createRow = ({ name: firstName, surname, phone }) => {
+  const createRow = ({name: firstName, surname, phone}) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
 
@@ -229,7 +229,7 @@
       },
     ]);
     const table = createTable();
-    const { form, overlay } = createForm();
+    const {form, overlay} = createForm();
     const footer = createFooter(title);
 
     app.append(header, main, footer);
@@ -241,7 +241,7 @@
       logo,
       buttonAdd: buttonsGroup.buttons[0],
       formOverlay: overlay,
-      form: form,
+      form,
       buttonDel: buttonsGroup.buttons[1],
       headerList: table.thead,
     };
@@ -274,6 +274,100 @@
     };
   };
 
+  // Получение текущего состояния сортировки из localStorage
+
+  const getSortContactsStorage = () =>
+    JSON.parse(localStorage.getItem('sortContacts')) || {
+      column: '',
+      isAscending: '',
+    };
+
+  // Обновление состояния сортировки в localStorage
+
+  const setSortContactsStorage = (column, isAscending) => {
+    const sortContacts = {column, isAscending};
+    localStorage.setItem('sortContacts', JSON.stringify(sortContacts));
+  };
+
+  // Сортировка контактов
+
+  const sortContacts = (cellSelector, list, isAscending) => {
+    const allData = [];
+
+    [...list.querySelectorAll('.contact')].forEach(row => {
+      const textContent = row.querySelector(cellSelector).textContent;
+      allData.push({data: textContent, row});
+    });
+
+    const newIsAscending = isAscending === undefined ? true : isAscending;
+
+    allData.sort((a, b) => {
+      if (newIsAscending) {
+        return a.data.localeCompare(b.data);
+      } else {
+        return b.data.localeCompare(a.data);
+      }
+    });
+
+    const sortedRows = allData.map(item => item.row);
+
+    list.innerHTML = '';
+    list.append(...sortedRows);
+    setSortContactsStorage(cellSelector, newIsAscending);
+  };
+
+  //  Обработка события клика на заголовке таблицы
+
+  const handleSortContacts = (headerList, list) => {
+    let isAscending = false;
+
+    headerList.addEventListener('click', (e) => {
+      const cell = e.target.closest('th');
+
+      if (cell.classList.contains('cell-name') ||
+        cell.classList.contains('cell-surname')) {
+        const cellSelector = '.' + cell.classList[2];
+        isAscending = !isAscending;
+        sortContacts(cellSelector, list, isAscending);
+      }
+    });
+  };
+
+  // Получение контактов из localStorage
+
+  const getStorage = (key) => {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data || [];
+  };
+
+  // Запись контактов в localStorage
+
+  const setStorage = (key, obj) => {
+    const contacts = getStorage(key);
+    contacts.push(obj);
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
+  // Удаление контактов из localStorage
+
+  const removeStorage = (phone) => {
+    const key = 'contacts';
+    const contacts = getStorage(key);
+    const dataIndex = contacts.findIndex(contact => contact.phone === phone);
+    contacts.splice(dataIndex, 1);
+
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
+  // Добавление контакта на страницу и в localStorage
+
+  const addContactPage = (newContact, list, logo) => {
+    const row = createRow(newContact);
+    list.append(row);
+    hoverRow([row], logo);
+    setStorage('contacts', newContact);
+  };
+
   const deleateControl = (buttonDel, list) => {
     /* Появление при нажатии на кнопку 'Удалить'
     скрытого поля и кнопки, имеющих класс delete*/
@@ -299,16 +393,7 @@
     });
   };
 
-  // Добавление контакта на страницу и в localStorage
-
-  const addContactPage = (newContact, list, logo) => {
-    const row = createRow(newContact);
-    list.append(row);
-    hoverRow([row], logo);
-    setStorage('contacts', newContact);
-  };
-
-  // Заполнение и отправка формы 
+  // Заполнение и отправка формы
 
   const formControl = (form, list, closeModal, logo) => {
     form.addEventListener('submit', e => {
@@ -321,61 +406,6 @@
       form.reset();
       closeModal();
     });
-  };
-
-  // Сортировка контактов
-
-  const sortContacts = (cellSelector, headerList, list) => {
-    const cell = headerList.querySelector(cellSelector);
-    let isAscending = true;
-
-    cell.addEventListener('click', () => {
-      const allData = [];
-
-      [...list.querySelectorAll('.contact')].forEach(row => {
-        const textContent = row.querySelector(cellSelector).textContent;
-        allData.push({ data: textContent, row });
-      });
-
-      if (isAscending) {
-        allData.sort((a, b) => a.data.localeCompare(b.data));
-      } else {
-        allData.sort((a, b) => b.data.localeCompare(a.data));
-      }
-
-      isAscending = !isAscending;
-
-      const sortedRows = allData.map(item => item.row);
-
-      list.innerHTML = '';
-      list.append(...sortedRows);
-    });
-  };
-
-  // Получение данных из localStorage
-
-  const getStorage = (key) => {
-    const data = JSON.parse(localStorage.getItem(key));
-    return data || [];
-  };
-
-  // Запись данных в localStorage
-
-  const setStorage = (key, obj) => {
-    const contacts = getStorage(key);
-    contacts.push(obj);
-    localStorage.setItem(key, JSON.stringify(contacts));
-  };
-
-  // Удаление контактов из localStorage
-
-  const removeStorage = (phone) => {
-    const key = 'contacts';
-    const contacts = getStorage(key);
-    const dataIndex = contacts.findIndex(contact => contact.phone === phone);
-    contacts.splice(dataIndex, 1);
-
-    localStorage.setItem(key, JSON.stringify(contacts));
   };
 
   const init = (selectorApp, title) => {
@@ -395,11 +425,14 @@
     renderContacts(list, contacts);
     hoverRow(list.querySelectorAll('.contact'), logo);
 
-    const { closeModal } = modalControl(buttonAdd, formOverlay);
+    const {closeModal} = modalControl(buttonAdd, formOverlay);
     deleateControl(buttonDel, list);
     formControl(form, list, closeModal, logo);
-    sortContacts('.cell-name', headerList, list);
-    sortContacts('.cell-surname', headerList, list);
+
+    handleSortContacts(headerList, list);
+
+    const {column, isAscending} = getSortContactsStorage();
+    sortContacts(column, list, isAscending);
   };
 
   window.phoneBookInit = init;
