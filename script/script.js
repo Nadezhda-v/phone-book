@@ -1,34 +1,6 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Иван',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Игорь',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Семён',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
-
 {
-  const addContactData = (newContact) => {
-    data.push(newContact);
-    console.log(data);
-  }
-
   const createContainer = () => {
     const container = document.createElement('div');
     container.classList.add('container');
@@ -70,7 +42,7 @@ const data = [
     const btnWrapper = document.createElement('div');
     btnWrapper.classList.add('btn-wrapper');
 
-    const buttons = params.map(({ className, type, text }) => {
+    const buttons = params.map(({className, type, text}) => {
       const button = document.createElement('button');
       button.className = className;
       button.type = type;
@@ -122,19 +94,19 @@ const data = [
 
       <div class="form-group">
         <label class="form-label" for="name">Имя:</label>
-        <input lass="form-input" name="name" 
+        <input class="form-input" name="name" 
           id="name" type="text" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="surname">Фамилия:</label>
-        <input lass="form-input" name="surname" 
+        <input class="form-input" name="surname" 
           id="surname" type="text" required>
       </div>
 
       <div class="form-group">
         <label class="form-label" for="phone">Телефон:</label>
-        <input lass="form-input" name="phone" 
+        <input class="form-input" name="phone" 
           id="phone" type="number" required>
       </div>
     `);
@@ -157,10 +129,10 @@ const data = [
 
     const buttonClose = form.querySelector('.close');
 
-    return { overlay, form, buttonClose };
+    return {overlay, form, buttonClose};
   };
 
-  const createRow = ({ name: firstName, surname, phone }) => {
+  const createRow = ({name: firstName, surname, phone}) => {
     const tr = document.createElement('tr');
     tr.classList.add('contact');
 
@@ -206,11 +178,9 @@ const data = [
     return tr;
   };
 
-  const renderContacts = (item, data) => {
-    const allRow = data.map(createRow);
-    item.append(...allRow);
-
-    return allRow;
+  const renderContacts = (list, contacts) => {
+    const allRow = contacts.map(createRow);
+    list.append(...allRow);
   };
 
   const hoverRow = (allRow, logo) => {
@@ -259,7 +229,7 @@ const data = [
       },
     ]);
     const table = createTable();
-    const { form, overlay } = createForm();
+    const {form, overlay} = createForm();
     const footer = createFooter(title);
 
     app.append(header, main, footer);
@@ -271,7 +241,7 @@ const data = [
       logo,
       buttonAdd: buttonsGroup.buttons[0],
       formOverlay: overlay,
-      form: form,
+      form,
       buttonDel: buttonsGroup.buttons[1],
       headerList: table.thead,
     };
@@ -304,7 +274,101 @@ const data = [
     };
   };
 
-  const deleateControl = (buttonDel, list, allRow) => {
+  // Получение текущего состояния сортировки из localStorage
+
+  const getSortContactsStorage = () =>
+    JSON.parse(localStorage.getItem('sortContacts')) || {
+      column: '',
+      isAscending: '',
+    };
+
+  // Обновление состояния сортировки в localStorage
+
+  const setSortContactsStorage = (column, isAscending) => {
+    const sortContacts = {column, isAscending};
+    localStorage.setItem('sortContacts', JSON.stringify(sortContacts));
+  };
+
+  // Сортировка контактов
+
+  const sortContacts = (cellSelector, list, isAscending) => {
+    const allData = [];
+
+    [...list.querySelectorAll('.contact')].forEach(row => {
+      const textContent = row.querySelector(cellSelector).textContent;
+      allData.push({data: textContent, row});
+    });
+
+    const newIsAscending = isAscending === undefined ? true : isAscending;
+
+    allData.sort((a, b) => {
+      if (newIsAscending) {
+        return a.data.localeCompare(b.data);
+      } else {
+        return b.data.localeCompare(a.data);
+      }
+    });
+
+    const sortedRows = allData.map(item => item.row);
+
+    list.innerHTML = '';
+    list.append(...sortedRows);
+    setSortContactsStorage(cellSelector, newIsAscending);
+  };
+
+  //  Обработка события клика на заголовке таблицы
+
+  const handleSortContacts = (headerList, list) => {
+    let isAscending = false;
+
+    headerList.addEventListener('click', (e) => {
+      const cell = e.target.closest('th');
+
+      if (cell.classList.contains('cell-name') ||
+        cell.classList.contains('cell-surname')) {
+        const cellSelector = '.' + cell.classList[2];
+        isAscending = !isAscending;
+        sortContacts(cellSelector, list, isAscending);
+      }
+    });
+  };
+
+  // Получение контактов из localStorage
+
+  const getStorage = (key) => {
+    const data = JSON.parse(localStorage.getItem(key));
+    return data || [];
+  };
+
+  // Запись контактов в localStorage
+
+  const setStorage = (key, obj) => {
+    const contacts = getStorage(key);
+    contacts.push(obj);
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
+  // Удаление контактов из localStorage
+
+  const removeStorage = (phone) => {
+    const key = 'contacts';
+    const contacts = getStorage(key);
+    const dataIndex = contacts.findIndex(contact => contact.phone === phone);
+    contacts.splice(dataIndex, 1);
+
+    localStorage.setItem(key, JSON.stringify(contacts));
+  };
+
+  // Добавление контакта на страницу и в localStorage
+
+  const addContactPage = (newContact, list, logo) => {
+    const row = createRow(newContact);
+    list.append(row);
+    hoverRow([row], logo);
+    setStorage('contacts', newContact);
+  };
+
+  const deleateControl = (buttonDel, list) => {
     /* Появление при нажатии на кнопку 'Удалить'
     скрытого поля и кнопки, имеющих класс delete*/
 
@@ -321,77 +385,26 @@ const data = [
 
       if (target.classList.contains('del-icon')) {
         const contactRow = target.closest('.contact');
-        const index = allRow.indexOf(contactRow);
-
-        if (index !== -1) {
-          allRow.splice(index, 1);
-
-        // Удаление контакта из массива data
-
-        const dataPhone = contactRow.querySelector('.td-phone a').textContent;
-        const dataIndex = data.findIndex(item => item.phone === dataPhone);
-
-        if (dataIndex !== -1) {
-          data.splice(dataIndex, 1);
-        }
-        }
+        const phone = contactRow.querySelector('.td-phone a').textContent;
 
         contactRow.remove();
-        console.log(data);
+        removeStorage(phone);
       }
     });
   };
 
-  // Добавление контакта на страницу
+  // Заполнение и отправка формы
 
-  const addContactPage = (newContact, list, allRow) => {
-    const row = createRow(newContact);
-    list.append(row);
-    allRow.push(row);
-  };
-
-  // Заполнение и отправка формы 
-
-  const formControl = (form, list, closeModal, allRow) => {
+  const formControl = (form, list, closeModal, logo) => {
     form.addEventListener('submit', e => {
       e.preventDefault();
       const formData = new FormData(e.target);
 
       const newContact = Object.fromEntries(formData);
-      addContactPage(newContact, list, allRow);
-      addContactData(newContact);
+      addContactPage(newContact, list, logo);
 
       form.reset();
       closeModal();
-    });
-  };
-
-  // Сортировка контактов
-
-  const sortContacts = (cellSelector, headerList, list, allRow) => {
-    const cell = headerList.querySelector(cellSelector);
-    let isAscending = true;
-
-    cell.addEventListener('click', () => {
-      const allData = [];
-
-      allRow.forEach(row => {
-        const textContent = row.querySelector(cellSelector).textContent;
-        allData.push({ data: textContent, row });
-      });
-
-      if (isAscending) {
-        allData.sort((a, b) => a.data.localeCompare(b.data));
-      } else {
-        allData.sort((a, b) => b.data.localeCompare(a.data));
-      }
-
-      isAscending = !isAscending;
-
-      const sortedRows = allData.map(item => item.row);
-
-      list.innerHTML = '';
-      list.append(...sortedRows);
     });
   };
 
@@ -408,14 +421,18 @@ const data = [
       form,
     } = renderPhoneBook(app, title);
 
-    const allRow = renderContacts(list, data);
-    hoverRow(allRow, logo);
+    const contacts = getStorage('contacts');
+    renderContacts(list, contacts);
+    hoverRow(list.querySelectorAll('.contact'), logo);
 
-    const { closeModal } = modalControl(buttonAdd, formOverlay);
-    deleateControl(buttonDel, list, allRow);
-    formControl(form, list, closeModal, allRow);
-    sortContacts('.cell-name', headerList, list, allRow);
-    sortContacts('.cell-surname', headerList, list, allRow);
+    const {closeModal} = modalControl(buttonAdd, formOverlay);
+    deleateControl(buttonDel, list);
+    formControl(form, list, closeModal, logo);
+
+    handleSortContacts(headerList, list);
+
+    const {column, isAscending} = getSortContactsStorage();
+    sortContacts(column, list, isAscending);
   };
 
   window.phoneBookInit = init;
