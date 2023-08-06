@@ -7,21 +7,42 @@ const getContactData = (key) => {
 
 // Запись контактов в localStorage
 
-const setContactData = (key, obj) => {
-  const contacts = getContactData(key);
-  contacts.push(obj);
-  localStorage.setItem(key, JSON.stringify(contacts));
+const setContactData = (data) => {
+  localStorage.setItem('contacts', JSON.stringify(data));
+};
+
+const addContactData = (contact) => {
+  const data = getContactData('contacts');
+  data.push(contact);
+  setContactData(data);
 };
 
 // Удаление контактов из localStorage
 
 const removeContactData = (phone) => {
-  const key = 'contacts';
-  const contacts = getContactData(key);
-  const dataIndex = contacts.findIndex(contact => contact.phone === phone);
-  contacts.splice(dataIndex, 1);
+  const data = getContactData('contacts');
+  const dataIndex = data.findIndex(contact => contact.phone === phone);
+  data.splice(dataIndex, 1);
 
-  localStorage.setItem(key, JSON.stringify(contacts));
+  setContactData(data);
+};
+
+// Обновление контактов в localStorage после редактирования
+
+const updateContactData = (phone, contactRow) => {
+  const data = getContactData('contacts');
+  const dataIndex = data.findIndex(contact => contact.phone === phone);
+
+  if (dataIndex !== -1) {
+    data[dataIndex].name = contactRow.querySelector('.cell-name')
+        .textContent;
+    data[dataIndex].surname = contactRow.querySelector('.cell-surname')
+        .textContent;
+    data[dataIndex].phone = contactRow.querySelector('.cell-phone a')
+        .textContent;
+
+    setContactData(data);
+  }
 };
 
 // Получение текущего состояния сортировки из localStorage
@@ -41,8 +62,9 @@ const setSortContactsStorage = (column, isAscending) => {
 
 export {
   getContactData,
-  setContactData,
+  addContactData,
   removeContactData,
   getSortContactsStorage,
   setSortContactsStorage,
+  updateContactData,
 };

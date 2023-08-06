@@ -14,6 +14,7 @@ const {
   sortContacts,
   handleSortContacts,
   hoverRow,
+  contactControl,
 } = control;
 
 {
@@ -40,6 +41,7 @@ const {
     handleSortContacts(headerList, list);
     sortContacts(column, list, isAscending);
     hoverRow(list.querySelectorAll('.contact'), logo);
+    contactControl(list);
   };
 
   window.phoneBookInit = init;
