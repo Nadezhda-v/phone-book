@@ -29,9 +29,9 @@ const removeContactData = (phone) => {
 
 // Обновление контактов в localStorage после редактирования
 
-const updateContactData = (phone, contactRow) => {
+const updateContactData = (prevPhone, contactRow) => {
   const data = getContactData('contacts');
-  const dataIndex = data.findIndex(contact => contact.phone === phone);
+  const dataIndex = data.findIndex(contact => contact.phone === prevPhone);
 
   if (dataIndex !== -1) {
     data[dataIndex].name = contactRow.querySelector('.cell-name')

@@ -3,6 +3,7 @@ import {
   addContactData,
   removeContactData,
   updateContactData,
+  getContactData,
 } from './serviceStorage.js';
 
 import {createRow} from './createElements.js';
@@ -154,68 +155,113 @@ const formControl = (form, list, closeModal, logo) => {
   });
 };
 
+// Валидация имени и фамилии при редактировании
+
 const isValidText = (text) => /^[A-Za-zА-Яа-я]+$/.test(text);
 
-const isValidPhoneNumber = (phone) => /^\d{11}$/.test(phone);
+// Валидация номера телефона при редактировании
 
-// Валидация контактов при редактировании
+const isValidPhoneNumber = (newPhone) => {
+  const isValidPhone = /^\d{11}$/.test(newPhone);
+  if (!isValidPhone) {
+    return false;
+  }
 
-const isValidCells = (row) => {
-  const newName = row.querySelector('.cell-name').textContent;
-  const newSurname = row.querySelector('.cell-surname').textContent;
-  const newPhone = row.querySelector('.cell-phone a').textContent;
+  const data = getContactData('contacts');
+  const repeatPhone = data.findIndex(contact => contact.phone === newPhone);
+  if (repeatPhone !== -1) {
+    return false;
+  }
 
-  return isValidText(newName) &&
-    isValidText(newSurname) &&
-    isValidPhoneNumber(newPhone);
+  return true;
 };
 
-const contactControl = (list) => {
-  let activeRow = null;
-  let activePhone = null;
+const handleBlur = (contactRow) => {
+  const phoneCell = contactRow.querySelector('.cell-phone');
+  const nameCell = contactRow.querySelector('.cell-name');
+  const surnameCell = contactRow.querySelector('.cell-surname');
+  const phoneHref = contactRow.querySelector('.cell-phone a');
 
+  const newName = nameCell.textContent;
+  const newSurname = surnameCell.textContent;
+  const newPhone = phoneHref.textContent;
+  phoneHref.setAttribute('href', newPhone);
+
+  const isValidName = isValidText(newName);
+  const isValidSurname = isValidText(newSurname);
+  const isValidPhone = isValidPhoneNumber(newPhone);
+
+  contactRow.classList.remove('table-primary');
+  nameCell.contentEditable = false;
+  surnameCell.contentEditable = false;
+  phoneCell.contentEditable = false;
+  phoneHref.contentEditable = false;
+
+  if (isValidName) {
+    updateContactData(contactRow.prevData.phone, contactRow);
+  } else {
+    nameCell.textContent = contactRow.prevData.name;
+  }
+
+  if (isValidSurname) {
+    updateContactData(contactRow.prevData.phone, contactRow);
+  } else {
+    surnameCell.textContent = contactRow.prevData.surname;
+  }
+
+  if (isValidPhone) {
+    updateContactData(contactRow.prevData.phone, contactRow);
+  } else {
+    phoneHref.textContent = contactRow.prevData.phone;
+    phoneHref.setAttribute('href', contactRow.prevData.phone);
+  }
+};
+
+const handleEditButton = (e) => {
+  const editButton = e.target;
+  const contactRow = editButton.closest('.contact');
+
+  const phoneCell = contactRow.querySelector('.cell-phone');
+  const nameCell = contactRow.querySelector('.cell-name');
+  const surnameCell = contactRow.querySelector('.cell-surname');
+
+  const phoneHref = contactRow.querySelector('.cell-phone a');
+  const prevName = nameCell.textContent;
+  const prevSurname = surnameCell.textContent;
+  const prevPhone = phoneHref.textContent;
+
+  contactRow.classList.add('table-primary');
+
+  nameCell.contentEditable = true;
+  surnameCell.contentEditable = true;
+  phoneCell.contentEditable = true;
+  phoneHref.contentEditable = true;
+
+  contactRow.prevData = {
+    name: prevName,
+    surname: prevSurname,
+    phone: prevPhone,
+  };
+
+  const cancelEditContact = e => {
+    if (!contactRow.contains(e.target)) {
+      handleBlur(contactRow);
+      document.removeEventListener('click', cancelEditContact);
+    }
+  };
+
+  document.addEventListener('click', cancelEditContact);
+};
+
+const editContactControl = (list) => {
   list.addEventListener('click', e => {
     const target = e.target;
     const closestEditButton = target.closest('.button-edit');
 
     if (closestEditButton) {
-      const contactRow = closestEditButton.closest('.contact');
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-
-      if (activeRow && activeRow !== contactRow) {
-        activeRow.contentEditable = false;
-      }
-
-      contactRow.contentEditable = true;
-      closestEditButton.contentEditable = false;
-      const range = document.createRange();
-      range.selectNodeContents(contactRow);
-      range.collapse(false);
-      sel.addRange(range);
-
-      activeRow = contactRow;
-      activePhone = activeRow.querySelector('.cell-phone a').textContent;
+      handleEditButton(e);
     }
   });
-
-  list.addEventListener('input', () => {
-    if (activeRow) {
-      const contactPhoneCell = activeRow.querySelector('.cell-phone a');
-      const newPhone = contactPhoneCell.textContent;
-      updateContactData(activePhone, activeRow);
-
-      newPhone !== activePhone ? activePhone = newPhone : null;
-    }
-  });
-
-  list.addEventListener('blur', () => {
-    if (activeRow) {
-      activeRow.contentEditable = false;
-      activeRow = null;
-      activePhone = null;
-    }
-  }, true);
 };
 
 export default {
@@ -225,5 +271,5 @@ export default {
   modalControl,
   deleateControl,
   formControl,
-  contactControl,
+  editContactControl,
 };
