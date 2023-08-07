@@ -66,7 +66,8 @@ const createTable = () => {
       <th class='delete'>Удалить</th>
       <th class="col-3 th-cell cell-name">Имя</th>
       <th class="col-3 th-cell cell-surname">Фамилия</th>
-      <th class="col-6">Телефон</th>
+      <th class="col-3">Телефон</th>
+      <th class="col-3">Действия</th>
     </tr>
   `);
 
@@ -147,10 +148,14 @@ const createRow = ({name: firstName, surname, phone}) => {
   tdSurname.textContent = surname;
 
   const tdPhone = document.createElement('td');
-  tdPhone.classList.add('d-flex', 'justify-content-between', 'td-phone');
+  tdPhone.classList.add('cell-phone');
+
   const phoneLink = document.createElement('a');
+  phoneLink.classList.add('d-block');
   phoneLink.href = `${phone}`;
   phoneLink.textContent = phone;
+
+  const tdActions = document.createElement('td');
 
   tr.phoneLink = phoneLink;
 
@@ -162,12 +167,14 @@ const createRow = ({name: firstName, surname, phone}) => {
     },
   ]);
 
-  tdPhone.append(phoneLink, ...buttonsGroup.buttons);
+  tdActions.append(...buttonsGroup.buttons);
+  tdPhone.append(phoneLink);
   tr.append(
       tdDel,
       tdName,
       tdSurname,
       tdPhone,
+      tdActions,
   );
 
   return tr;
