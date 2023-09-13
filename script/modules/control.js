@@ -3,10 +3,15 @@ import {
   addContactData,
   removeContactData,
   updateContactData,
-  getContactData,
 } from './serviceStorage.js';
 
 import {createRow} from './createElements.js';
+
+import {
+  controlInputValue,
+  isValidText,
+  isValidPhoneNumber,
+} from './formValidation.js';
 
 const hoverRow = (allRow, logo) => {
   const text = logo.textContent;
@@ -35,6 +40,7 @@ const modalControl = (buttonAdd, formOverlay) => {
 
   buttonAdd.addEventListener('click', () => {
     openModal();
+    controlInputValue();
   });
 
   formOverlay.addEventListener('click', e => {
@@ -155,27 +161,6 @@ const formControl = (form, list, closeModal, logo) => {
   });
 };
 
-// Валидация имени и фамилии при редактировании
-
-const isValidText = (text) => /^[A-Za-zА-Яа-я]+$/.test(text);
-
-// Валидация номера телефона при редактировании
-
-const isValidPhoneNumber = (newPhone) => {
-  const isValidPhone = /^\d{11}$/.test(newPhone);
-  if (!isValidPhone) {
-    return false;
-  }
-
-  const data = getContactData('contacts');
-  const repeatPhone = data.findIndex(contact => contact.phone === newPhone);
-  if (repeatPhone !== -1) {
-    return false;
-  }
-
-  return true;
-};
-
 const handleBlur = (contactRow) => {
   const phoneCell = contactRow.querySelector('.cell-phone');
   const nameCell = contactRow.querySelector('.cell-name');
@@ -197,23 +182,25 @@ const handleBlur = (contactRow) => {
   phoneCell.contentEditable = false;
   phoneHref.contentEditable = false;
 
-  if (isValidName) {
+  if (isValidName && isValidSurname && isValidPhone) {
     updateContactData(contactRow.prevData.phone, contactRow);
   } else {
     nameCell.textContent = contactRow.prevData.name;
-  }
-
-  if (isValidSurname) {
-    updateContactData(contactRow.prevData.phone, contactRow);
-  } else {
     surnameCell.textContent = contactRow.prevData.surname;
-  }
-
-  if (isValidPhone) {
-    updateContactData(contactRow.prevData.phone, contactRow);
-  } else {
     phoneHref.textContent = contactRow.prevData.phone;
     phoneHref.setAttribute('href', contactRow.prevData.phone);
+  }
+};
+
+const handleInput = (e, maxLength) => {
+  const target = e.target;
+
+  if (e.key === 'Backspace' && target.textContent.length === 0) {
+    e.preventDefault();
+  }
+
+  if (target.textContent.length >= maxLength && e.key !== 'Backspace') {
+    e.preventDefault();
   }
 };
 
@@ -236,6 +223,10 @@ const handleEditButton = (e) => {
   surnameCell.contentEditable = true;
   phoneCell.contentEditable = true;
   phoneHref.contentEditable = true;
+
+  nameCell.addEventListener('keydown', (e) => handleInput(e, 15));
+  surnameCell.addEventListener('keydown', (e) => handleInput(e, 15));
+  phoneCell.addEventListener('keydown', (e) => handleInput(e, 12));
 
   contactRow.prevData = {
     name: prevName,

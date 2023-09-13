@@ -93,19 +93,19 @@ const createForm = () => {
     <div class="form-group">
       <label class="form-label" for="name">Имя:</label>
       <input class="form-input" name="name" 
-        id="name" type="text" required>
+        id="name" type="text" maxlength="15" required>
     </div>
 
     <div class="form-group">
       <label class="form-label" for="surname">Фамилия:</label>
       <input class="form-input" name="surname" 
-        id="surname" type="text" required>
+        id="surname" type="text" maxlength="15" required>
     </div>
 
     <div class="form-group">
       <label class="form-label" for="phone">Телефон:</label>
       <input class="form-input" name="phone" 
-        id="phone" type="number" required>
+        id="phone" type="text" required>
     </div>
   `);
 
