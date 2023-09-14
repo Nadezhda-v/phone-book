@@ -1,12 +1,17 @@
 import {
   getContactData,
   getSortContactsStorage,
-} from './modules/serviceStorage.js';
+} from './script/serviceStorage.js';
 
-import * as render from './modules/render.js';
+import * as render from './script/render.js';
+import control from './script/control.js';
+
+import './css/normalize.min.css';
+import './css/bootstrap.min.css';
+import './css/style.css';
+
 const {renderPhoneBook, renderContacts} = render;
 
-import control from './modules/control.js';
 const {
   modalControl,
   deleateControl,
@@ -44,5 +49,5 @@ const {
     editContactControl(list);
   };
 
-  window.phoneBookInit = init;
+  init('#app', 'Надежда');
 }
