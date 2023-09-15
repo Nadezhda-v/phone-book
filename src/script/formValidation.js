@@ -1,6 +1,6 @@
 import {
   getContactData,
-} from './serviceStorage.js';
+} from './serviceStorage';
 
 const controlInputValue = () => {
   const inputName = document.querySelector('#name');
@@ -52,6 +52,7 @@ const isValidPhoneNumber = (newPhone) => {
   const data = getContactData('contacts');
   const repeatPhone = data.findIndex(contact => contact.phone === newPhone);
   if (repeatPhone !== -1) {
+    console.log(repeatPhone);
     return false;
   }
 

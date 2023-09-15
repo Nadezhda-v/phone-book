@@ -3,15 +3,15 @@ import {
   addContactData,
   removeContactData,
   updateContactData,
-} from './serviceStorage.js';
+} from './serviceStorage';
 
-import {createRow} from './createElements.js';
+import {createRow} from './createElements';
 
 import {
   controlInputValue,
   isValidText,
   isValidPhoneNumber,
-} from './formValidation.js';
+} from './formValidation';
 
 const hoverRow = (allRow, logo) => {
   const text = logo.textContent;
@@ -182,13 +182,18 @@ const handleBlur = (contactRow) => {
   phoneCell.contentEditable = false;
   phoneHref.contentEditable = false;
 
-  if (isValidName && isValidSurname && isValidPhone) {
+  if (isValidPhone) {
+    updateContactData(contactRow.prevData.phone, contactRow);
+  } else {
+    phoneHref.textContent = contactRow.prevData.phone;
+    phoneHref.setAttribute('href', contactRow.prevData.phone);
+  }
+
+  if (isValidName && isValidSurname) {
     updateContactData(contactRow.prevData.phone, contactRow);
   } else {
     nameCell.textContent = contactRow.prevData.name;
     surnameCell.textContent = contactRow.prevData.surname;
-    phoneHref.textContent = contactRow.prevData.phone;
-    phoneHref.setAttribute('href', contactRow.prevData.phone);
   }
 };
 

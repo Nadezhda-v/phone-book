@@ -7,7 +7,7 @@ import {
   createForm,
   createRow,
   createFooter,
-} from './createElements.js';
+} from './createElements';
 
 export const renderContacts = (list, contacts) => {
   const allRow = contacts.map(createRow);
