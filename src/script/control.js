@@ -45,7 +45,10 @@ const modalControl = (buttonAdd, formOverlay) => {
 
   formOverlay.addEventListener('click', e => {
     const target = e.target;
-    if (target === formOverlay || target.closest('.close')) {
+    if (target === formOverlay ||
+      target.closest('.close') ||
+      target.closest('.btn-cancel')
+    ) {
       closeModal();
     }
   });
@@ -59,11 +62,12 @@ const modalControl = (buttonAdd, formOverlay) => {
 
 const sortContacts = (cellSelector, list, isAscending) => {
   const allData = [];
-
-  [...list.querySelectorAll('.contact')].forEach(row => {
-    const textContent = row.querySelector(cellSelector).textContent;
-    allData.push({data: textContent, row});
-  });
+  if (cellSelector) {
+    [...list.querySelectorAll('.contact')].forEach(row => {
+      const textContent = row.querySelector(cellSelector).textContent;
+      allData.push({data: textContent, row});
+    });
+  }
 
   const newIsAscending = isAscending === undefined ? true : isAscending;
 
@@ -176,7 +180,7 @@ const handleBlur = (contactRow) => {
   const isValidSurname = isValidText(newSurname);
   const isValidPhone = isValidPhoneNumber(newPhone);
 
-  contactRow.classList.remove('table-primary');
+  contactRow.classList.remove('select-line');
   nameCell.contentEditable = false;
   surnameCell.contentEditable = false;
   phoneCell.contentEditable = false;
@@ -222,7 +226,7 @@ const handleEditButton = (e) => {
   const prevSurname = surnameCell.textContent;
   const prevPhone = phoneHref.textContent;
 
-  contactRow.classList.add('table-primary');
+  contactRow.classList.add('select-line');
 
   nameCell.contentEditable = true;
   surnameCell.contentEditable = true;
@@ -252,7 +256,7 @@ const handleEditButton = (e) => {
 const editContactControl = (list) => {
   list.addEventListener('click', e => {
     const target = e.target;
-    const closestEditButton = target.closest('.button-edit');
+    const closestEditButton = target.closest('.btn-edit');
 
     if (closestEditButton) {
       handleEditButton(e);

@@ -49,5 +49,5 @@ const {
     editContactControl(list);
   };
 
-  init('#app', 'Надежда');
+  init('#app', '');
 }

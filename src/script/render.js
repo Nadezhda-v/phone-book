@@ -20,12 +20,12 @@ export const renderPhoneBook = (app, title) => {
   const main = createMain();
   const buttonsGroup = createButtonsGroup([
     {
-      className: 'btn btn-primary mr-3 btn-add',
+      className: 'btn mr-3 btn-add',
       type: 'button',
       text: 'Добавить',
     },
     {
-      className: 'btn btn-danger',
+      className: 'btn btn-del',
       type: 'button',
       text: 'Удалить',
     },
