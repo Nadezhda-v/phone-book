@@ -1,5 +1,11 @@
 <h1 align="center">Телефонный справочник</h1>
 
+<div align="center">
+  <a href="https://nadezhda-v.github.io/phone-book/">
+    <img src="https://user-images.githubusercontent.com/109743172/276902643-203d0052-b866-4571-91d5-3c22ecc9401c.jpg" width="900" alt="Главная страница">
+  </a>
+</div>
+
 <h4>:link: Ссылка на проект: https://nadezhda-v.github.io/phone-book/</h4>
 
 <h2>Описание проекта</h2>
